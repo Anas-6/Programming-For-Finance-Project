@@ -25,7 +25,7 @@ def apply_gta_vi_theme():
             }
 
             .stButton > button {
-                background-color: #ff66c4;
+                background-color: #cc66ff;
                 color: black;
                 border-radius: 5px;
                 padding: 0.5em 1em;
