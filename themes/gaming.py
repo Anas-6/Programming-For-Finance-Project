@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.model_selection import train_test_split
+import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -47,7 +48,7 @@ def apply_gta_vi_theme():
 
     st.image("assets/gifs/gta_banner.gif", use_container_width=True)
 
-# Main Logic for GTA VI Logistic Regression
+# 🚓 GTA VI Theme Main Logic with Logistic Regression
 def gaming_app():
     apply_gta_vi_theme()
     st.title("💸 GTA VI Theme: Logistic Regression Heist")
@@ -63,31 +64,35 @@ def gaming_app():
         if uploaded:
             df = pd.read_csv(uploaded)
             st.success("💾 File uploaded successfully.")
-            target_column = st.selectbox("Select the target column (binary)", options=df.columns)
+            # Expect user to provide a target column in uploaded file
+            possible_targets = df.columns.tolist()
+            target_column = st.selectbox("Select target column (binary classification)", possible_targets)
     else:
         tickers = st.text_input("📈 Enter stock tickers (comma separated)", value="AAPL,MSFT,TSLA")
         if st.button("🚦 Download Stock Data"):
             try:
-                prices = {}
+                prices_list = []
                 for symbol in tickers.split(','):
-                    data = yf.download(symbol.strip(), period="6mo")['Close']
+                    symbol = symbol.strip()
+                    data = yf.download(symbol, period="6mo")['Close']
                     if data.empty:
-                        st.warning(f"No data fetched for {symbol.strip()}")
+                        st.warning(f"No data fetched for {symbol}")
                     else:
-                        prices[symbol.strip()] = data
-                if prices:
-                    df = pd.DataFrame(prices).dropna()
+                        prices_list.append(data.rename(symbol))
+                if prices_list:
+                    df = pd.concat(prices_list, axis=1).dropna()
                     st.success("✅ Stock prices loaded.")
-                    # For logistic regression we need a binary target, create one:
-                    # Let's create a 'Target' column that predicts if price will go up the next day (1) or not (0)
-                    df['Target'] = (df.shift(-1) > df).astype(int).iloc[:,0]  # use first ticker for target
+
+                    # Create target column based on first ticker price movement (up=1, down=0)
+                    first_ticker = tickers.split(',')[0].strip()
+                    df['Target'] = (df[first_ticker].shift(-1) > df[first_ticker]).astype(int)
                     target_column = 'Target'
                 else:
                     st.error("❌ Failed to fetch any stock data.")
             except Exception as e:
                 st.error(f"❌ Failed to fetch stock data: {e}")
 
-    if df is not None and not df.empty:
+    if df is not None and not df.empty and target_column:
         st.subheader("🔎 Preview of Vice City Data")
         st.dataframe(df.head())
 
@@ -96,48 +101,65 @@ def gaming_app():
         sns.heatmap(df.corr(), annot=True, cmap="magma", ax=ax)
         st.pyplot(fig)
 
-        if target_column:
-            st.subheader("🚓 Logistic Regression Heist")
+        st.subheader("🚓 Logistic Regression Heist")
 
-            # Select features (excluding target)
-            features = [col for col in df.columns if col != target_column]
-            selected_features = st.multiselect("🎯 Select features for prediction", features, default=features[:3])
+        features = df.columns.drop(target_column).tolist()
+        selected_features = st.multiselect("🎯 Select features for logistic regression", features, default=features[:2])
 
-            if len(selected_features) >= 1:
-                data = df[selected_features]
-                target = df[target_column]
+        if len(selected_features) >= 1:
+            X = df[selected_features]
+            y = df[target_column]
 
-                # Clean data - drop NA rows
-                data = data.dropna()
-                target = target.loc[data.index]
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(X)
 
-                scaler = StandardScaler()
-                data_scaled = scaler.fit_transform(data)
+            test_size = st.slider("Select test set size (percentage)", 10, 50, 30) / 100.0
 
-                # Split dataset
-                X_train, X_test, y_train, y_test = train_test_split(data_scaled, target, test_size=0.3, random_state=42)
+            X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=test_size, random_state=42, shuffle=False)
 
-                model = LogisticRegression(random_state=42)
-                model.fit(X_train, y_train)
-                y_pred = model.predict(X_test)
+            model = LogisticRegression(random_state=42)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
 
-                acc = accuracy_score(y_test, y_pred)
-                st.markdown(f"**Accuracy:** {acc:.2%}")
+            accuracy = accuracy_score(y_test, y_pred)
+            st.markdown(f"### 🎯 Model Accuracy: {accuracy*100:.2f}%")
 
-                st.subheader("Classification Report")
-                report = classification_report(y_test, y_pred, output_dict=True)
-                report_df = pd.DataFrame(report).transpose()
-                st.dataframe(report_df)
+            st.subheader("📊 Classification Report")
+            report = classification_report(y_test, y_pred, output_dict=True)
+            report_df = pd.DataFrame(report).transpose()
+            st.dataframe(report_df)
 
-                st.subheader("Confusion Matrix")
-                fig, ax = plt.subplots()
-                sns.heatmap(confusion_matrix(y_test, y_pred), annot=True, fmt='d', cmap="magma", ax=ax)
-                st.pyplot(fig)
+            st.subheader("🔍 Confusion Matrix")
+            cm = confusion_matrix(y_test, y_pred)
+            fig_cm, ax_cm = plt.subplots()
+            sns.heatmap(cm, annot=True, fmt='d', cmap='coolwarm', ax=ax_cm)
+            ax_cm.set_xlabel('Predicted')
+            ax_cm.set_ylabel('Actual')
+            st.pyplot(fig_cm)
 
-                st.image("assets/gifs/gta_footer.gif", use_container_width=True)
-            else:
-                st.warning("⛔ Select at least 1 feature for logistic regression.")
+            # Plot prediction probabilities if 2 features selected
+            if len(selected_features) == 2:
+                probas = model.predict_proba(X_test)
+                prob_df = pd.DataFrame({
+                    selected_features[0]: X_test[:, 0],
+                    selected_features[1]: X_test[:, 1],
+                    'Probability of Class 1': probas[:, 1],
+                    'Predicted Class': y_pred
+                })
+
+                fig_scatter = px.scatter(prob_df, x=selected_features[0], y=selected_features[1],
+                                         color='Predicted Class', size='Probability of Class 1',
+                                         color_continuous_scale=px.colors.sequential.Plasma,
+                                         title="🌴 GTA VI Logistic Regression Prediction Map",
+                                         template="plotly_dark")
+                st.plotly_chart(fig_scatter)
+
+            st.image("assets/gifs/gta_footer.gif", use_container_width=True)
+
         else:
-            st.warning("⛔ Please select the target column (binary) to proceed.")
+            st.warning("⛔ Select at least 1 feature for logistic regression.")
     else:
         st.warning("🧾 Upload data or fetch stock prices to start your logistic regression heist.")
+
+if __name__ == "__main__":
+    gaming_app()
