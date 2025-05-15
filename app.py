@@ -1,6 +1,6 @@
 import streamlit as st
 from themes import zombie, futuristic, game_of_thrones, gaming
- import show_welcome
+import show_welcome
 
 
 
