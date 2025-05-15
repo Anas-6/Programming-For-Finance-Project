@@ -44,7 +44,7 @@ def apply_gta_vi_theme():
     """, unsafe_allow_html=True)
 
     try:
-        st.image("assets/gifs/gta_banner.gif", use_container_width=True)
+        st.image("assets/gifs/gta_header.gif", use_container_width=True)
     except Exception:
         st.warning("⚠️ Header GIF not found.")
 
