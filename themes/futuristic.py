@@ -31,7 +31,7 @@ def apply_futuristic_theme():
     """, unsafe_allow_html=True)
 
     try:
-        st.image("assets/gifs/futuristic.gif", use_container_width=True)
+        st.image("assets/gifs/futuristic2.gif", use_container_width=True)
     except Exception:
         st.warning("⚠️ Futuristic header GIF not found.")
 
