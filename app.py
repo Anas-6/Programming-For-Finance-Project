@@ -1,7 +1,8 @@
 import streamlit as st
 from themes import zombie, futuristic, got, gaming
 from utils import show_welcome
-from PIL import Image
+from show_welcome import show_welcome
+
 
 # Set Streamlit page configuration
 st.set_page_config(
