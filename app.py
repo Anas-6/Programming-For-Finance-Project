@@ -62,7 +62,7 @@ st.markdown("""
 if page == "🏠 Welcome":
     show_welcome()
 elif page == "🧟 Zombie Realm":
-    zombie.apply_zombie_theme()
+    zombie.run_zombie_theme()
 elif page == "🚀 Futuristic Zone":
     futuristic.futuristic_app()
 elif page == "🐉 Thrones Territory":
