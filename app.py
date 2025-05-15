@@ -70,4 +70,3 @@ elif page == "🐉 Thrones Territory":
 elif page == "🎮 Gaming World":
     gaming.gaming_app()
 
-st.image("assets/gifs/footer.gif", use_container_width=True)
