@@ -11,7 +11,7 @@ def show_welcome():
         """, unsafe_allow_html=True
     )
 
-    st.image("assets/Gifs/images/finverse_banner.png", use_column_width=True)
+    st.image("assets/Gifs/images/finverse_banner.png", use_container_width=True)
 
     st.markdown("---")
 
