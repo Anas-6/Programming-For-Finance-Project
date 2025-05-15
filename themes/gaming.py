@@ -8,7 +8,7 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-#  GTA VI Neon Theme Styling
+# 🎮 GTA VI Neon Theme Styling
 def apply_gta_vi_theme():
     st.markdown("""
         <style>
@@ -44,14 +44,17 @@ def apply_gta_vi_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    st.image("assets/gifs/gta_banner.gif", use_column_width=True)
+    # Banner image (check that the path is correct)
+    try:
+        st.image("assets/gifs/gta_banner.gif", use_container_width=True)
+    except Exception:
+        st.warning("⚠️ Banner image not found. Please make sure 'assets/gifs/gta_banner.gif' exists.")
 
 
-# 🚓 GTA VI Theme Main Logic
-def run_gta_vi_theme():
+# 🎮 GTA VI Theme Main Function
+def gaming_app():
     apply_gta_vi_theme()
     st.title("💸 GTA VI Theme: Cluster Heist (K-Means)")
-
     st.markdown("**Vice City meets Finance** — Find hidden clusters in your financial empire.")
 
     data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kragle)", "Yahoo Finance"))
@@ -68,20 +71,31 @@ def run_gta_vi_theme():
             try:
                 prices = {}
                 for symbol in tickers.split(','):
-                    prices[symbol.strip()] = yf.download(symbol.strip(), period="6mo")['Close']
-                df = pd.DataFrame(prices).dropna()
-                st.success("✅ Stock prices loaded.")
-            except:
-                st.error("❌ Failed to fetch stock data.")
+                    symbol = symbol.strip().upper()
+                    stock_data = yf.download(symbol, period="6mo")['Close']
+                    if stock_data.empty:
+                        st.warning(f"No valid data for ticker: {symbol}")
+                    else:
+                        prices[symbol] = stock_data
+                if prices:
+                    df = pd.DataFrame(prices).dropna()
+                    st.success("✅ Stock prices loaded.")
+                else:
+                    st.error("❌ Failed to fetch data for any valid ticker.")
+            except Exception as e:
+                st.error(f"❌ An error occurred: {e}")
 
     if df is not None and not df.empty:
         st.subheader("🔎 Preview of Vice City Data")
         st.dataframe(df.head())
 
         st.subheader("🔥 Heatmap of Your Empire")
-        fig, ax = plt.subplots()
-        sns.heatmap(df.corr(), annot=True, cmap="magma", ax=ax)
-        st.pyplot(fig)
+        try:
+            fig, ax = plt.subplots()
+            sns.heatmap(df.corr(), annot=True, cmap="magma", ax=ax)
+            st.pyplot(fig)
+        except:
+            st.warning("⚠️ Unable to generate heatmap.")
 
         st.subheader("🚓 K-Means Cluster Job")
 
@@ -89,23 +103,36 @@ def run_gta_vi_theme():
         selected_features = st.multiselect("🎯 Select features for clustering", df.columns.tolist(), default=df.columns[:2].tolist())
 
         if len(selected_features) >= 2:
-            data = df[selected_features]
-            scaler = StandardScaler()
-            data_scaled = scaler.fit_transform(data)
+            try:
+                data = df[selected_features]
+                scaler = StandardScaler()
+                data_scaled = scaler.fit_transform(data)
 
-            model = KMeans(n_clusters=num_clusters, random_state=42)
-            labels = model.fit_predict(data_scaled)
-            df["Cluster"] = labels
+                model = KMeans(n_clusters=num_clusters, random_state=42)
+                labels = model.fit_predict(data_scaled)
+                df["Cluster"] = labels
 
-            st.success("💰 Clustering complete. You've unlocked new territories.")
+                st.success("💰 Clustering complete. You've unlocked new territories.")
 
-            fig = px.scatter(df, x=selected_features[0], y=selected_features[1], color="Cluster",
-                             title="🌴 GTA VI Clusters: Vice City Turf Map",
-                             template="plotly_dark", color_discrete_sequence=px.colors.sequential.Plasma)
-            st.plotly_chart(fig)
-
-            st.image("assets/gifs/gta_footer.gif", use_column_width=True)
+                fig = px.scatter(
+                    df,
+                    x=selected_features[0],
+                    y=selected_features[1],
+                    color="Cluster",
+                    title="🌴 GTA VI Clusters: Vice City Turf Map",
+                    template="plotly_dark",
+                    color_discrete_sequence=px.colors.sequential.Plasma
+                )
+                st.plotly_chart(fig)
+            except Exception as e:
+                st.error(f"⚠️ Clustering failed: {e}")
         else:
             st.warning("⛔ Select at least 2 features to cluster.")
+
+        # Footer image (check that the path is correct)
+        try:
+            st.image("assets/gifs/gta_footer.gif", use_containerwidth=True)
+        except Exception:
+            st.warning("⚠️ Footer image not found. Please ensure 'assets/gifs/gta_footer.gif' exists.")
     else:
         st.warning("🧾 Upload data or fetch stock prices to start your cluster job.")
