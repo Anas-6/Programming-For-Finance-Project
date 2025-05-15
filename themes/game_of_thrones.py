@@ -14,6 +14,11 @@ def apply_got_theme():
         <style>
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
+            body {
+                background-color: #1a1a1a;
+                color: #f8f1e5;
+            }
+
             h1, h2, h3 {
                 font-family: 'MedievalSharp', cursive;
                 color: #e63946;
@@ -33,61 +38,63 @@ def apply_got_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    try:
-        st.image("assets/gifs/got_banner.gif", use_container_width=True)
-    except Exception:
-        st.warning("⚠️ GOT banner GIF not found.")
+    st.image("assets/gifs/got_banner.gif", use_column_width=True)
 
-# Main App Logic
-def got_app():
+
+# Main Game of Thrones Theme Logic
+def run_got_theme():
     apply_got_theme()
     st.title("🐉 Game of Thrones Theme: Cluster the Kingdoms (K-Means)")
 
     st.markdown("Group stocks or financial features into clusters using K-Means Clustering.")
 
     data_source = st.radio("Choose Data Source:", ("Yahoo Finance", "Upload CSV"))
-    df = None
 
+    df = None
     if data_source == "Yahoo Finance":
-        tickers = st.text_input("Enter multiple tickers separated by commas (e.g., AAPL,GOOG,MSFT):")
+        tickers_input = st.text_input("Enter multiple tickers separated by commas (e.g., AAPL,GOOG,MSFT):")
         if st.button("Fetch Data"):
-            with st.spinner("📡 Fetching stock data..."):
-                try:
-                    data = {}
-                    for ticker in tickers.split(','):
-                        ticker = ticker.strip().upper()
-                        stock_data = yf.download(ticker, period="6mo")
-                        if not stock_data.empty and 'Close' in stock_data.columns:
-                            data[ticker] = stock_data['Close']
-                    if data:
-                        df = pd.DataFrame(data).dropna()
-                        st.success(f"✅ Fetched {df.shape[0]} rows of data for {len(data)} tickers.")
-                    else:
-                        st.error("❌ No valid data fetched. Check tickers or try again later.")
-                except Exception as e:
-                    st.error(f"❌ Failed to fetch data: {e}")
+            if not tickers_input:
+                st.warning("Please enter at least one ticker.")
+            else:
+                tickers = [ticker.strip().upper() for ticker in tickers_input.split(",") if ticker.strip()]
+                data = {}
+
+                for ticker in tickers:
+                    try:
+                        stock_data = yf.download(ticker, period="6mo")['Close']
+                        if not stock_data.empty:
+                            data[ticker] = stock_data
+                        else:
+                            st.warning(f"No data for ticker: {ticker}")
+                    except Exception as e:
+                        st.warning(f"Error fetching {ticker}: {e}")
+
+                if data:
+                    df = pd.DataFrame(data).dropna()
+                    st.success(f"Fetched {df.shape[0]} rows of data for {len(data)} tickers.")
+                else:
+                    st.error("Failed to fetch data for any ticker.")
     else:
         uploaded = st.file_uploader("Upload Kragle Financial CSV", type=["csv"])
         if uploaded:
             try:
                 df = pd.read_csv(uploaded)
-                st.success("✅ File uploaded.")
-            except Exception as e:
-                st.error(f"❌ Failed to read uploaded file: {e}")
+                st.success("File uploaded successfully.")
+            except:
+                st.error("Error reading the uploaded CSV file.")
 
     if df is not None and not df.empty:
         st.subheader("📊 Preview of Data")
         st.dataframe(df.head())
 
         st.subheader("🔥 Feature Correlation")
-        try:
-            fig, ax = plt.subplots()
-            sns.heatmap(df.corr(), annot=True, ax=ax, cmap="coolwarm")
-            st.pyplot(fig)
-        except:
-            st.warning("Unable to generate correlation heatmap.")
+        fig, ax = plt.subplots()
+        sns.heatmap(df.corr(), annot=True, ax=ax, cmap="coolwarm")
+        st.pyplot(fig)
 
         st.subheader("⚔️ K-Means Clustering")
+
         try:
             num_clusters = st.slider("Select number of clusters", 2, 6, 3)
             features = st.multiselect("Select features to use", df.columns.tolist(), default=df.columns[:2].tolist())
@@ -99,19 +106,16 @@ def got_app():
                 kmeans.fit(X_scaled)
                 df['Cluster'] = kmeans.labels_
 
-                st.success("🏰 Clustering complete!")
+                st.success("Clustering complete!")
 
                 fig = px.scatter(df, x=features[0], y=features[1], color='Cluster',
                                  title="🏰 Clusters of the Realm", template="plotly_dark")
                 st.plotly_chart(fig)
             else:
-                st.warning("⚠️ Select at least 2 features for clustering.")
+                st.warning("Select at least 2 features for clustering.")
         except Exception as e:
-            st.error(f"An error occurred during clustering: {e}")
+            st.error(f"An error occurred: {e}")
 
-        try:
-            st.image("assets/gifs/got_header.gif", use_container_width=True)
-        except Exception:
-            st.warning("⚠️ GOT footer GIF not found.")
+        st.image("assets/gifs/got_footer.gif", use_column_width=True)
     else:
-        st.info("ℹ️ Please load data to begin.")
+        st.warning("Please load data to continue.")
