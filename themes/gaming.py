@@ -50,7 +50,7 @@ def apply_gaming_theme():
 
     # Try to load a GTA VI themed pixel art GIF (place your gif in assets/gifs)
     try:
-        st.image("assets/gifs/gta_vi_pixel_art.gif", use_container_width=True)
+        st.image("assets/gifs/gta_banner.gif", use_container_width=True)
     except Exception:
         st.warning("⚠️ GTA VI themed GIF not found. Please add one to assets/gifs/gta_vi_pixel_art.gif")
 
