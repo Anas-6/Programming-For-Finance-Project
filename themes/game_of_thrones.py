@@ -42,7 +42,7 @@ def apply_got_theme():
 
 
 # Main Game of Thrones Theme Logic
-def run_got_theme():
+def got_app():
     apply_got_theme()
     st.title("🐉 Game of Thrones Theme: Cluster the Kingdoms (K-Means)")
 
