@@ -38,7 +38,7 @@ def apply_futuristic_theme():
 # Main Futuristic Logic
 def futuristic_app():
     apply_futuristic_theme()
-    st.title("🚀 Futuristic Theme: Stock Movement Prediction (Up/Down)")
+    st.title("🚀 Futuristic Theme: Stock Movement Prediction (Logistic)")
 
     ticker = st.text_input("Enter a stock ticker (e.g., TSLA):", value="TSLA")
     if st.button("Fetch Data"):
