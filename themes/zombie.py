@@ -3,138 +3,161 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+import random
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
-import yfinance as yf
 
-# Apply eerie zombie theme
+# Set Zombie Theme Styling
 def apply_zombie_theme():
     st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Butcherman&display=swap');
-            @import url('https://fonts.googleapis.com/css2?family=Nosifer&display=swap');
-            @import url('https://fonts.googleapis.com/css2?family=Macondo+Swash+Caps&display=swap');
-            @import url('https://fonts.googleapis.com/css2?family=Metal+Mania&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
 
-            html, body, [class*="css"] {
+            body {
                 background-color: #0b0c10;
                 color: #c5c6c7;
-                font-family: 'Butcherman', cursive;
             }
 
             h1, h2, h3, h4 {
-                font-family: 'Butcherman', cursive;
+                font-family: 'Creepster', cursive;
                 color: #66fcf1;
             }
 
             .stButton>button {
                 background-color: #1f2833;
                 color: white;
-                font-family: 'Metal Mania', cursive;
+                border: 1px solid #45a29e;
+                transition: 0.3s;
             }
 
-            .stRadio > div {
-                font-family: 'Macondo Swash Caps', cursive;
+            .stButton>button:hover {
+                background-color: #66fcf1;
+                color: black;
             }
 
-            .stMarkdown {
-                font-family: 'Nosifer', cursive;
+            .reportview-container {
+                background: #0b0c10;
             }
+
         </style>
     """, unsafe_allow_html=True)
 
     try:
         st.image("assets/gifs/zombie_header.gif", use_container_width=True)
     except:
-        st.warning("⚠️ Zombie header GIF not found.")
+        st.warning("⚠️ Header GIF not found.")
 
 
-# 🧟‍♂️ Zombie Logic
 def zombie_app():
     apply_zombie_theme()
     st.title("💀 Zombie Theme: Stock Price Prediction")
-
     st.markdown("Enter a stock ticker or upload your dataset to begin.")
 
     data_source = st.radio("Choose data source:", ("Yahoo Finance", "Upload CSV"))
-
     df = None
+
     if data_source == "Yahoo Finance":
+        import yfinance as yf
         ticker = st.text_input("Enter Stock Ticker (e.g., AAPL):", value="AAPL")
         if st.button("Fetch Data"):
             df = yf.download(ticker, period="1y")
             if not df.empty:
-                st.success(f"Fetched {len(df)} rows for {ticker}")
-                df.reset_index(inplace=True)
+                st.success(f"✅ Fetched {len(df)} rows for {ticker}")
+            else:
+                st.error("❌ Failed to fetch data. Please check the ticker symbol.")
     else:
         uploaded_file = st.file_uploader("Upload your Kragle CSV", type=["csv"])
         if uploaded_file:
             df = pd.read_csv(uploaded_file)
-            st.success("Dataset uploaded successfully!")
+            st.success("✅ Dataset uploaded successfully!")
 
     if df is not None and not df.empty:
         st.subheader("📊 Dataset Preview")
         st.dataframe(df.head())
 
-        # Date processing
-        if 'Date' not in df.columns:
-            df['Date'] = pd.to_datetime(df['Date']) if 'Date' in df else pd.to_datetime(df['index'], errors='coerce')
-        df['Date_ordinal'] = pd.to_datetime(df['Date']).map(pd.Timestamp.toordinal)
+        # Handle index for Plotly
+        if not isinstance(df.index, pd.DatetimeIndex):
+            if 'Date' in df.columns:
+                df['Date'] = pd.to_datetime(df['Date'])
+                df.set_index('Date', inplace=True)
 
-        # Default Feature Options
-        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        if 'Date_ordinal' not in numeric_cols:
-            numeric_cols.append('Date_ordinal')
-        target = st.selectbox("🎯 Select Target Variable", options=numeric_cols, index=numeric_cols.index("Close") if "Close" in numeric_cols else 0)
-        default_features = [col for col in numeric_cols if col != target]
+        # Plot closing price
+        st.subheader("📈 Closing Price Trend")
+        try:
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df['Close'],
+                mode='lines',
+                name='Close Price',
+                line=dict(color='lime')
+            ))
+            fig.update_layout(
+                title='Closing Price Over Time',
+                plot_bgcolor='black',
+                paper_bgcolor='black',
+                font_color='white'
+            )
+            st.plotly_chart(fig)
+        except Exception as e:
+            st.error(f"❌ Error plotting data: {e}")
 
-        features = st.multiselect("🧠 Select Feature Variables for Prediction", options=default_features, default=default_features[:2])
+        # Feature engineering for Date if needed
+        df['Date_ordinal'] = df.index.map(pd.Timestamp.toordinal)
 
-        if features:
-            X = df[features]
-            y = df[target]
+        # User-selected features
+        st.subheader("🧠 Select Features for Linear Regression")
+        numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+        if 'Close' in numeric_cols:
+            numeric_cols.remove('Close')  # We are predicting 'Close'
 
-            # Split data
+        selected_features = st.multiselect("Choose independent variables (features):", numeric_cols + ['Date_ordinal'], default=['Date_ordinal'])
+
+        if selected_features:
+            X = df[selected_features]
+            y = df['Close']
+
+            # Train/Test split
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-            # Model Training
+            # Train model
             model = LinearRegression()
             model.fit(X_train, y_train)
             y_pred = model.predict(X_test)
 
-            # Performance
+            # Model performance
             st.subheader("📉 Model Performance")
             try:
-                rmse = mean_squared_error(y_test, y_pred, squared=False)
-            except TypeError:
-                rmse = mean_squared_error(y_test, y_pred) ** 0.5
-            r2 = r2_score(y_test, y_pred)
+                rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+                r2 = r2_score(y_test, y_pred)
+                st.write(f"**R² Score**: {r2:.4f}")
+                st.write(f"**RMSE**: {rmse:.4f}")
+            except Exception as e:
+                st.error(f"❌ Error calculating metrics: {e}")
 
-            st.write(f"**R² Score**: {r2:.4f}")
-            st.write(f"**RMSE**: {rmse:.4f}")
+            # Random prediction color
+            colors = ['deepskyblue', 'lime', 'magenta', 'yellow', 'red', 'orange', 'springgreen']
+            line_color = random.choice(colors)
 
-            # Prediction Plot
+            # Prediction vs Actual Plot
             st.subheader("🧟 Predicted vs Actual Closing Prices")
-            fig, ax = plt.subplots(figsize=(10, 5))
-            ax.plot(y_test.values, label='Actual', color='red')
-            ax.plot(y_pred, label='Predicted', color='lime')
+            fig2, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(y_test.values, label='Actual', color='orange')
+            ax.plot(y_pred, label='Predicted', color=line_color)
+            ax.set_title("Prediction vs Actual", fontsize=14, color='white')
             ax.legend()
-            st.pyplot(fig)
+            ax.set_facecolor('black')
+            fig2.patch.set_facecolor('black')
+            st.pyplot(fig2)
 
-            # Closing Price Trend with Colors
-            st.subheader("📈 Closing Price Trend")
-            fig2 = go.Figure()
-            palette = ['#66fcf1', '#ff4c4c', '#c5c6c7', '#45a29e', '#ffe100', '#8b0000']
-            for i, feature in enumerate(features):
-                fig2.add_trace(go.Scatter(x=df['Date'], y=df[feature], mode='lines', name=feature, line=dict(color=palette[i % len(palette)])))
-            st.plotly_chart(fig2)
-
+            st.markdown("---")
             try:
                 st.image("assets/gifs/zombie_line.gif", use_container_width=True)
             except:
-                st.warning("⚠️ Zombie footer GIF not found.")
+                st.warning("⚠️ Footer zombie GIF not found.")
         else:
-            st.warning("☠️ Please select at least one feature variable.")
+            st.warning("⚠️ Please select at least one feature to continue.")
+
     else:
-        st.info("☠️ Please fetch a ticker or upload a valid CSV to begin.")
+        st.warning("⚠️ Please upload a dataset or fetch a valid ticker first.")
