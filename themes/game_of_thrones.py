@@ -106,7 +106,7 @@ def got_app():
         except Exception as e:
             st.error(f"An error occurred during clustering: {e}")
 
-        st.image("assets/gifs/got_footer.gif", use_column_width=True)
+        st.image("assets/gifs/got_footer.gif", use_container_width=True)
 
     else:
         st.warning("Please load data to continue.")
