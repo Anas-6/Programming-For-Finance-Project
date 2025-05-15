@@ -15,7 +15,7 @@ def apply_gta_vi_theme():
 
             html, body {
                 background-color: #0d0d0d;
-                color: #ff66c4;
+                color: #BC13FE;
             }
 
             h1, h2, h3 {
