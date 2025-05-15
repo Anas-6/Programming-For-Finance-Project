@@ -44,67 +44,10 @@ def apply_gta_vi_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    # Banner image (check that the path is correct)
-    try:
-        st.image("assets/gifs/gta_banner.gif", use_container_width=True)
-    except Exception:
-        st.warning("⚠️ Banner image not found. Please make sure 'assets/gifs/gta_banner.gif' exists.")
+    st.image("assets/gifs/gta_banner.gif", use_column_width=True)
 
 
-# 🎮 GTA VI Theme Main Function
-def gaming_app():
-    import streamlit as st
-import pandas as pd
-import numpy as np
-import yfinance as yf
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-import plotly.express as px
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# 🕶️ GTA VI Neon Theme Styling
-def apply_gta_vi_theme():
-    st.markdown("""
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
-
-            html, body {
-                background-color: #0d0d0d;
-                color: #ff66c4;
-            }
-
-            h1, h2, h3 {
-                font-family: 'Major Mono Display', monospace;
-                color: #00ffff;
-                text-shadow: 2px 2px #ff66c4;
-            }
-
-            .stButton > button {
-                background-color: #ff66c4;
-                color: black;
-                border-radius: 5px;
-                padding: 0.5em 1em;
-                font-weight: bold;
-            }
-
-            .stButton > button:hover {
-                background-color: #00ffff;
-                color: black;
-            }
-
-            .css-1v0mbdj, .st-bx, .css-1dp5vir {
-                background-color: #1a1a1a !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-    try:
-        st.image("assets/gifs/gta_banner.gif", use_column_width=True)
-    except:
-        st.warning("⚠️ Could not load banner image. Check if 'gta_banner.gif' exists in assets/gifs.")
-
-# 🎮 GTA VI Theme Main App
+# 🎮 GTA VI Theme Main Logic
 def gaming_app():
     apply_gta_vi_theme()
     st.title("💸 GTA VI Theme: Cluster Heist (K-Means)")
@@ -114,24 +57,25 @@ def gaming_app():
     data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kragle)", "Yahoo Finance"))
 
     df = None
+
     if data_source == "Upload CSV (Kragle)":
         uploaded = st.file_uploader("Upload financial CSV file", type=["csv"])
         if uploaded:
-            try:
-                df = pd.read_csv(uploaded)
-                st.success("💾 File uploaded successfully.")
-            except Exception as e:
-                st.error(f"❌ Failed to read CSV: {e}")
+            df = pd.read_csv(uploaded)
+            st.success("💾 File uploaded successfully.")
     else:
         tickers = st.text_input("📈 Enter stock tickers (comma separated)", value="AAPL,MSFT,TSLA,NVDA")
         if st.button("🚦 Download Stock Data"):
-            prices = {}
+            prices = []
+            tickers_list = []
+
             for symbol in tickers.split(','):
                 symbol = symbol.strip().upper()
                 try:
                     data = yf.download(symbol, period="6mo")
                     if not data.empty and 'Close' in data:
-                        prices[symbol] = data['Close']
+                        prices.append(data['Close'].rename(symbol))
+                        tickers_list.append(symbol)
                         st.success(f"✅ {symbol} data fetched.")
                     else:
                         st.warning(f"⚠️ No valid 'Close' data for: {symbol}")
@@ -140,7 +84,7 @@ def gaming_app():
 
             if prices:
                 try:
-                    df = pd.DataFrame(prices).dropna()
+                    df = pd.concat(prices, axis=1).dropna()
                     st.success("📊 Combined DataFrame created.")
                 except Exception as e:
                     st.error(f"❌ Error creating DataFrame: {e}")
@@ -180,7 +124,7 @@ def gaming_app():
             try:
                 st.image("assets/gifs/gta_footer.gif", use_column_width=True)
             except:
-                st.warning("⚠️ Could not load footer image. Check if 'gta_footer.gif' exists in assets/gifs.")
+                st.warning("📁 Footer image not found.")
         else:
             st.warning("⛔ Select at least 2 features to cluster.")
     else:
