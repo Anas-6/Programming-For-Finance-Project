@@ -51,7 +51,7 @@ def apply_zombie_theme():
 
 def zombie_app():
     apply_zombie_theme()
-    st.title("💀 Zombie Theme: Stock Price Prediction")
+    st.title("💀 Zombie Theme: Stock Price Prediction(Linear)")
     st.markdown("Enter a stock ticker or upload your dataset to begin.")
 
     data_source = st.radio("Choose data source:", ("Yahoo Finance", "Upload CSV"))
