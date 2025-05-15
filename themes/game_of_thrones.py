@@ -9,7 +9,7 @@ import seaborn as sns
 import yfinance as yf
 
 # Game of Thrones Theme CSS
-def apply_got_theme():
+def apply_game_of_thrones_theme():
     st.markdown("""
         <style>
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
@@ -38,12 +38,12 @@ def apply_got_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    st.image("assets/gifs/got_header.gif", use_container_width=True)
+    st.image("assets/gifs/got_header.gif", use_column_width=True)
 
 
-# Main Game of Thrones Theme Logic
+# ✅ Main function to run GOT theme logic (renamed as requested)
 def got_app():
-    apply_got_theme()
+    apply_game_of_thrones_theme()
     st.title("🐉 Game of Thrones Theme: Cluster the Kingdoms (K-Means)")
 
     st.markdown("Group stocks or financial features into clusters using K-Means Clustering.")
@@ -63,10 +63,10 @@ def got_app():
                 for ticker in tickers:
                     try:
                         stock_data = yf.download(ticker, period="6mo")['Close']
-                        if not stock_data.empty:
+                        if isinstance(stock_data, pd.Series) and not stock_data.empty:
                             data[ticker] = stock_data
                         else:
-                            st.warning(f"No data for ticker: {ticker}")
+                            st.warning(f"No valid data for ticker: {ticker}")
                     except Exception as e:
                         st.warning(f"Error fetching {ticker}: {e}")
 
@@ -74,7 +74,7 @@ def got_app():
                     df = pd.DataFrame(data).dropna()
                     st.success(f"Fetched {df.shape[0]} rows of data for {len(data)} tickers.")
                 else:
-                    st.error("Failed to fetch data for any ticker.")
+                    st.error("Failed to fetch data for any valid ticker.")
     else:
         uploaded = st.file_uploader("Upload Kragle Financial CSV", type=["csv"])
         if uploaded:
