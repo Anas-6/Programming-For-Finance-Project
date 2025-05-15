@@ -49,7 +49,6 @@ def apply_zombie_theme():
         st.warning("⚠️ Header GIF not found.")
 
 
-# Main app logic
 def zombie_app():
     apply_zombie_theme()
     st.title("💀 Zombie Theme: Stock Price Prediction")
@@ -77,67 +76,88 @@ def zombie_app():
         st.subheader("📊 Dataset Preview")
         st.dataframe(df.head())
 
-        # Fix index for Plotly
+        # Handle index for Plotly
         if not isinstance(df.index, pd.DatetimeIndex):
             if 'Date' in df.columns:
                 df['Date'] = pd.to_datetime(df['Date'])
                 df.set_index('Date', inplace=True)
 
-        # Closing Price Plot
+        # Plot closing price
         st.subheader("📈 Closing Price Trend")
         try:
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=df.index, y=df['Close'], mode='lines', name='Close Price', line=dict(color='lime')))
-            fig.update_layout(title='Closing Price Over Time', plot_bgcolor='black', paper_bgcolor='black', font_color='white')
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df['Close'],
+                mode='lines',
+                name='Close Price',
+                line=dict(color='lime')
+            ))
+            fig.update_layout(
+                title='Closing Price Over Time',
+                plot_bgcolor='black',
+                paper_bgcolor='black',
+                font_color='white'
+            )
             st.plotly_chart(fig)
         except Exception as e:
             st.error(f"❌ Error plotting data: {e}")
 
-        # Feature Engineering
-        df = df.copy()
-        df['Date'] = df.index
-        df['Date_ordinal'] = pd.to_datetime(df['Date']).map(pd.Timestamp.toordinal)
+        # Feature engineering for Date if needed
+        df['Date_ordinal'] = df.index.map(pd.Timestamp.toordinal)
 
-        X = df[['Date_ordinal']]
-        y = df['Close']
+        # User-selected features
+        st.subheader("🧠 Select Features for Linear Regression")
+        numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+        if 'Close' in numeric_cols:
+            numeric_cols.remove('Close')  # We are predicting 'Close'
 
-        # Train/Test Split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        selected_features = st.multiselect("Choose independent variables (features):", numeric_cols + ['Date_ordinal'], default=['Date_ordinal'])
 
-        # Model Training
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
+        if selected_features:
+            X = df[selected_features]
+            y = df['Close']
 
-        # Metrics
-        st.subheader("📉 Model Performance")
-        try:
-            rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-            r2 = r2_score(y_test, y_pred)
-            st.write(f"**R² Score**: {r2:.4f}")
-            st.write(f"**RMSE**: {rmse:.4f}")
-        except Exception as e:
-            st.error(f"❌ Error calculating metrics: {str(e)}")
+            # Train/Test split
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        # 🎨 Random line color for prediction
-        colors = ['deepskyblue', 'lime', 'magenta', 'yellow', 'red', 'orange', 'springgreen']
-        line_color = random.choice(colors)
+            # Train model
+            model = LinearRegression()
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
 
-        # Prediction Plot
-        st.subheader("🧟 Predicted vs Actual Closing Prices")
-        fig2, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(y_test.values, label='Actual', color='orange')
-        ax.plot(y_pred, label='Predicted', color=line_color)
-        ax.set_title("Prediction vs Actual", fontsize=14, color='white')
-        ax.legend()
-        ax.set_facecolor('black')
-        fig2.patch.set_facecolor('black')
-        st.pyplot(fig2)
+            # Model performance
+            st.subheader("📉 Model Performance")
+            try:
+                rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+                r2 = r2_score(y_test, y_pred)
+                st.write(f"**R² Score**: {r2:.4f}")
+                st.write(f"**RMSE**: {rmse:.4f}")
+            except Exception as e:
+                st.error(f"❌ Error calculating metrics: {e}")
 
-        st.markdown("---")
-        try:
-            st.image("assets/gifs/zombie_line.gif", use_container_width=True)
-        except:
-            st.warning("⚠️ Footer zombie GIF not found.")
+            # Random prediction color
+            colors = ['deepskyblue', 'lime', 'magenta', 'yellow', 'red', 'orange', 'springgreen']
+            line_color = random.choice(colors)
+
+            # Prediction vs Actual Plot
+            st.subheader("🧟 Predicted vs Actual Closing Prices")
+            fig2, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(y_test.values, label='Actual', color='orange')
+            ax.plot(y_pred, label='Predicted', color=line_color)
+            ax.set_title("Prediction vs Actual", fontsize=14, color='white')
+            ax.legend()
+            ax.set_facecolor('black')
+            fig2.patch.set_facecolor('black')
+            st.pyplot(fig2)
+
+            st.markdown("---")
+            try:
+                st.image("assets/gifs/zombie_line.gif", use_container_width=True)
+            except:
+                st.warning("⚠️ Footer zombie GIF not found.")
+        else:
+            st.warning("⚠️ Please select at least one feature to continue.")
+
     else:
         st.warning("⚠️ Please upload a dataset or fetch a valid ticker first.")
