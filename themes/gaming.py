@@ -3,163 +3,146 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from sklearn.model_selection import train_test_split
-import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# GTA VI Neon Theme Styling
-def apply_gta_vi_theme():
+# --- Gaming Theme Visual Styling (bright colors + pixel art vibes) ---
+def apply_gaming_theme():
     st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
-
-            html, body {
-                background-color: #0d0d0d;
-                color: #ff66c4;
+            @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+            
+            html, body, [class*="css"]  {
+                background-color: #f0f8ff;
+                color: #2c3e50;
+                font-family: 'Press Start 2P', cursive;
             }
 
             h1, h2, h3 {
-                font-family: 'Major Mono Display', monospace;
-                color: #00ffff;
-                text-shadow: 2px 2px #ff66c4;
+                color: #e67e22;
+                text-shadow: 2px 2px #d35400;
             }
 
             .stButton > button {
-                background-color: #ff66c4;
-                color: black;
-                border-radius: 5px;
-                padding: 0.5em 1em;
+                background-color: #e67e22;
+                color: white;
                 font-weight: bold;
+                border-radius: 12px;
+                padding: 10px 20px;
             }
 
             .stButton > button:hover {
-                background-color: #00ffff;
-                color: black;
+                background-color: #d35400;
+                color: white;
             }
 
-            .css-1v0mbdj, .st-bx, .css-1dp5vir {
-                background-color: #1a1a1a !important;
+            .stFileUpload>div>div {
+                background-color: #dff9fb;
+                border-radius: 10px;
+                padding: 10px;
             }
         </style>
     """, unsafe_allow_html=True)
+    st.image("assets/gifs/pixel_art_gaming.gif", use_container_width=True)
 
-    st.image("assets/gifs/gta_banner.gif", use_container_width=True)
-
-# 🚓 GTA VI Theme Main Logic with Logistic Regression
+# --- Main Gaming Theme Application ---
 def gaming_app():
-    apply_gta_vi_theme()
-    st.title("💸 GTA VI Theme: Logistic Regression Heist")
-    st.markdown("**Vice City meets Finance** — Predict your financial empire's future moves.")
+    apply_gaming_theme()
 
+    st.title("🎮 Gaming Theme: Logistic Regression Heist")
+    st.markdown("**Vice City meets Finance — Predict your financial empire's future moves.**")
+
+    # Data Source Choice
     data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kragle)", "Yahoo Finance"))
 
     df = None
-    target_column = None
-
     if data_source == "Upload CSV (Kragle)":
-        uploaded = st.file_uploader("Upload financial CSV file", type=["csv"])
-        if uploaded:
-            df = pd.read_csv(uploaded)
-            st.success("💾 File uploaded successfully.")
-            # Expect user to provide a target column in uploaded file
-            possible_targets = df.columns.tolist()
-            target_column = st.selectbox("Select target column (binary classification)", possible_targets)
+        uploaded_file = st.file_uploader("Upload your financial dataset (CSV)", type=["csv"])
+        if uploaded_file is not None:
+            df = pd.read_csv(uploaded_file)
+            st.success("✅ Kragle dataset loaded successfully!")
     else:
         tickers = st.text_input("📈 Enter stock tickers (comma separated)", value="AAPL,MSFT,TSLA")
-        if st.button("🚦 Download Stock Data"):
+        if st.button("🚦 Fetch Stock Data"):
             try:
-                prices_list = []
-                for symbol in tickers.split(','):
-                    symbol = symbol.strip()
-                    data = yf.download(symbol, period="6mo")['Close']
-                    if data.empty:
-                        st.warning(f"No data fetched for {symbol}")
-                    else:
-                        prices_list.append(data.rename(symbol))
-                if prices_list:
-                    df = pd.concat(prices_list, axis=1).dropna()
-                    st.success("✅ Stock prices loaded.")
-
-                    # Create target column based on first ticker price movement (up=1, down=0)
-                    first_ticker = tickers.split(',')[0].strip()
-                    df['Target'] = (df[first_ticker].shift(-1) > df[first_ticker]).astype(int)
-                    target_column = 'Target'
-                else:
-                    st.error("❌ Failed to fetch any stock data.")
+                prices = {}
+                for ticker in tickers.split(','):
+                    ticker = ticker.strip().upper()
+                    stock_data = yf.download(ticker, period="6mo")['Close']
+                    prices[ticker] = stock_data
+                df = pd.DataFrame(prices).dropna()
+                st.success("✅ Yahoo Finance data fetched!")
             except Exception as e:
                 st.error(f"❌ Failed to fetch stock data: {e}")
 
-    if df is not None and not df.empty and target_column:
-        st.subheader("🔎 Preview of Vice City Data")
+    if df is not None:
+        st.subheader("🔎 Dataset Preview")
         st.dataframe(df.head())
 
-        st.subheader("🔥 Heatmap of Your Empire")
-        fig, ax = plt.subplots()
-        sns.heatmap(df.corr(), annot=True, cmap="magma", ax=ax)
-        st.pyplot(fig)
+        # Prepare Data for Logistic Regression
+        st.markdown("### Prepare Data for Logistic Regression")
 
-        st.subheader("🚓 Logistic Regression Heist")
+        # We'll create a binary target to predict if the price will go UP (1) or DOWN (0) next day
+        df = df.sort_index()  # Ensure data is sorted by date ascending
+        df_returns = df.pct_change().dropna()
 
-        features = df.columns.drop(target_column).tolist()
-        selected_features = st.multiselect("🎯 Select features for logistic regression", features, default=features[:2])
+        st.markdown("**Note:** We create a target variable to predict if stock price will go UP the next day (1) or not (0).")
 
-        if len(selected_features) >= 1:
-            X = df[selected_features]
-            y = df[target_column]
+        # Let user select one ticker to model
+        ticker_list = df.columns.tolist()
+        selected_ticker = st.selectbox("Select stock ticker to build logistic regression model", ticker_list)
 
+        if selected_ticker:
+            data = pd.DataFrame()
+            data['Return'] = df_returns[selected_ticker]
+            data['Target'] = (data['Return'].shift(-1) > 0).astype(int)  # Predict if next day return > 0
+            
+            data = data.dropna()
+
+            st.write("Sample of prepared data:")
+            st.dataframe(data.head())
+
+            # Feature and Target Split
+            X = data[['Return']].values
+            y = data['Target'].values
+
+            # Train-test split
+            test_size = st.slider("Select test data size (%)", 10, 50, 30)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size/100, random_state=42, shuffle=False)
+
+            # Standardize features
             scaler = StandardScaler()
-            X_scaled = scaler.fit_transform(X)
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_test_scaled = scaler.transform(X_test)
 
-            test_size = st.slider("Select test set size (percentage)", 10, 50, 30) / 100.0
+            if st.button("🔥 Train Logistic Regression Model"):
+                model = LogisticRegression()
+                model.fit(X_train_scaled, y_train)
 
-            X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=test_size, random_state=42, shuffle=False)
+                y_pred = model.predict(X_test_scaled)
+                acc = accuracy_score(y_test, y_pred)
+                st.success(f"Model trained! Accuracy on test data: {acc:.2f}")
 
-            model = LogisticRegression(random_state=42)
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
+                # Confusion matrix plot
+                cm = confusion_matrix(y_test, y_pred)
+                fig, ax = plt.subplots()
+                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
+                ax.set_xlabel("Predicted")
+                ax.set_ylabel("Actual")
+                ax.set_title("Confusion Matrix")
+                st.pyplot(fig)
 
-            accuracy = accuracy_score(y_test, y_pred)
-            st.markdown(f"### 🎯 Model Accuracy: {accuracy*100:.2f}%")
+                # Classification report
+                st.text("Classification Report:")
+                st.text(classification_report(y_test, y_pred))
 
-            st.subheader("📊 Classification Report")
-            report = classification_report(y_test, y_pred, output_dict=True)
-            report_df = pd.DataFrame(report).transpose()
-            st.dataframe(report_df)
+                # Show coefficients
+                coef = model.coef_[0][0]
+                st.write(f"Logistic Regression coefficient for Return feature: {coef:.4f}")
 
-            st.subheader("🔍 Confusion Matrix")
-            cm = confusion_matrix(y_test, y_pred)
-            fig_cm, ax_cm = plt.subplots()
-            sns.heatmap(cm, annot=True, fmt='d', cmap='coolwarm', ax=ax_cm)
-            ax_cm.set_xlabel('Predicted')
-            ax_cm.set_ylabel('Actual')
-            st.pyplot(fig_cm)
-
-            # Plot prediction probabilities if 2 features selected
-            if len(selected_features) == 2:
-                probas = model.predict_proba(X_test)
-                prob_df = pd.DataFrame({
-                    selected_features[0]: X_test[:, 0],
-                    selected_features[1]: X_test[:, 1],
-                    'Probability of Class 1': probas[:, 1],
-                    'Predicted Class': y_pred
-                })
-
-                fig_scatter = px.scatter(prob_df, x=selected_features[0], y=selected_features[1],
-                                         color='Predicted Class', size='Probability of Class 1',
-                                         color_continuous_scale=px.colors.sequential.Plasma,
-                                         title="🌴 GTA VI Logistic Regression Prediction Map",
-                                         template="plotly_dark")
-                st.plotly_chart(fig_scatter)
-
-            st.image("assets/gifs/gta_footer.gif", use_container_width=True)
-
-        else:
-            st.warning("⛔ Select at least 1 feature for logistic regression.")
     else:
         st.warning("🧾 Upload data or fetch stock prices to start your logistic regression heist.")
 
-if __name__ == "__main__":
-    gaming_app()
