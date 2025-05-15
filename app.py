@@ -34,7 +34,7 @@ st.markdown("""
 # Add project logo
 col1, col2 = st.columns([1, 6])
 with col1:
-   st.image("assets/Gifs/images/finverse_logo.png", width=90)
+   st.image("assets/gifs/images/finverse_logo.png", width=90)
 
 
 with col2:
