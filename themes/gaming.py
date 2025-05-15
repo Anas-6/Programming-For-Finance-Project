@@ -1,118 +1,111 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+import yfinance as yf
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 
-def run(data):
-    st.markdown(
-        """
+#  GTA VI Neon Theme Styling
+def apply_gta_vi_theme():
+    st.markdown("""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        .gaming-header {
-            color: #00ffea;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 32px;
-            text-shadow: 2px 2px 8px #ff00ff;
-        }
-        .gaming-subheader {
-            color: #ff6f61;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 18px;
-        }
+            @import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
+
+            html, body {
+                background-color: #0d0d0d;
+                color: #ff66c4;
+            }
+
+            h1, h2, h3 {
+                font-family: 'Major Mono Display', monospace;
+                color: #00ffff;
+                text-shadow: 2px 2px #ff66c4;
+            }
+
+            .stButton > button {
+                background-color: #ff66c4;
+                color: black;
+                border-radius: 5px;
+                padding: 0.5em 1em;
+                font-weight: bold;
+            }
+
+            .stButton > button:hover {
+                background-color: #00ffff;
+                color: black;
+            }
+
+            .css-1v0mbdj, .st-bx, .css-1dp5vir {
+                background-color: #1a1a1a !important;
+            }
         </style>
-        <h1 class="gaming-header">🎮 Gaming Theme - K-Means Clustering 🎮</h1>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-    st.markdown(
-        """
-        <p class="gaming-subheader">
-        Experience clustering with pixel art vibes! Use K-Means to find patterns in your financial data.
-        </p>
-        """, unsafe_allow_html=True)
+    st.image("assets/gifs/gta_banner.gif", use_column_width=True)
 
-    # Pixel art gaming GIF - vibrant, high quality
-    st.image("https://media.giphy.com/media/3o7TKtnuHOHHUjR38Y/giphy.gif", width=220)
 
-    if data is None or data.empty:
-        st.warning("🚨 Please upload a Kragle dataset or fetch Yahoo Finance data to start!")
-        return
+# 🚓 GTA VI Theme Main Logic
+def gaming_app():
+    apply_gta_vi_theme()
+    st.title("💸 GTA VI Theme: Cluster Heist (K-Means)")
 
-    st.write("### Dataset Snapshot")
-    st.dataframe(data.head(10))
+    st.markdown("**Vice City meets Finance** — Find hidden clusters in your financial empire.")
 
-    # Filter numeric columns for clustering
-    numeric_cols = data.select_dtypes(include=[np.number]).columns.tolist()
+    data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kragle)", "Yahoo Finance"))
 
-    if len(numeric_cols) < 2:
-        st.error("Dataset requires at least 2 numeric columns for K-Means clustering.")
-        return
+    df = None
+    if data_source == "Upload CSV (Kragle)":
+        uploaded = st.file_uploader("Upload financial CSV file", type=["csv"])
+        if uploaded:
+            df = pd.read_csv(uploaded)
+            st.success("💾 File uploaded successfully.")
+    else:
+        tickers = st.text_input("📈 Enter stock tickers (comma separated)", value="AAPL,MSFT,TSLA")
+        if st.button("🚦 Download Stock Data"):
+            try:
+                prices = {}
+                for symbol in tickers.split(','):
+                    prices[symbol.strip()] = yf.download(symbol.strip(), period="6mo")['Close']
+                df = pd.DataFrame(prices).dropna()
+                st.success("✅ Stock prices loaded.")
+            except:
+                st.error("❌ Failed to fetch stock data.")
 
-    # Select features for clustering
-    selected_features = st.multiselect(
-        "Select 2 or more numeric features for clustering:",
-        numeric_cols,
-        default=numeric_cols[:2]
-    )
+    if df is not None and not df.empty:
+        st.subheader("🔎 Preview of Vice City Data")
+        st.dataframe(df.head())
 
-    if len(selected_features) < 2:
-        st.warning("Please select at least 2 features.")
-        return
+        st.subheader("🔥 Heatmap of Your Empire")
+        fig, ax = plt.subplots()
+        sns.heatmap(df.corr(), annot=True, cmap="magma", ax=ax)
+        st.pyplot(fig)
 
-    # Select number of clusters (K)
-    n_clusters = st.slider("Choose number of clusters (K):", 2, 10, 3)
+        st.subheader("🚓 K-Means Cluster Job")
 
-    # Prepare data for clustering
-    df_cluster = data[selected_features].dropna()
+        num_clusters = st.slider("Number of clusters", 2, 6, 3)
+        selected_features = st.multiselect("🎯 Select features for clustering", df.columns.tolist(), default=df.columns[:2].tolist())
 
-    # Show info about dropped rows due to NaNs
-    dropped_rows = data.shape[0] - df_cluster.shape[0]
-    if dropped_rows > 0:
-        st.info(f"Note: {dropped_rows} rows dropped due to missing values in selected features.")
+        if len(selected_features) >= 2:
+            data = df[selected_features]
+            scaler = StandardScaler()
+            data_scaled = scaler.fit_transform(data)
 
-    # Perform K-Means clustering
-    try:
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
-        clusters = kmeans.fit_predict(df_cluster)
-        df_cluster['Cluster'] = clusters
-    except Exception as e:
-        st.error(f"Error during clustering: {e}")
-        return
+            model = KMeans(n_clusters=num_clusters, random_state=42)
+            labels = model.fit_predict(data_scaled)
+            df["Cluster"] = labels
 
-    st.write(f"### Clustering Results (K = {n_clusters})")
-    st.write(df_cluster.head())
+            st.success("💰 Clustering complete. You've unlocked new territories.")
 
-    # Plot clustering results
-    plt.figure(figsize=(9, 7))
-    sns.set_style("darkgrid")
+            fig = px.scatter(df, x=selected_features[0], y=selected_features[1], color="Cluster",
+                             title="🌴 GTA VI Clusters: Vice City Turf Map",
+                             template="plotly_dark", color_discrete_sequence=px.colors.sequential.Plasma)
+            st.plotly_chart(fig)
 
-    # Scatter plot for first two selected features
-    sns.scatterplot(
-        x=df_cluster[selected_features[0]],
-        y=df_cluster[selected_features[1]],
-        hue=df_cluster['Cluster'],
-        palette='bright',
-        s=100,
-        alpha=0.85,
-        edgecolor='black'
-    )
-
-    plt.title("K-Means Clustering Visualization", fontsize=18, color='#00ffea', fontweight='bold')
-    plt.xlabel(selected_features[0], fontsize=14)
-    plt.ylabel(selected_features[1], fontsize=14)
-    plt.legend(title='Cluster')
-    plt.tight_layout()
-
-    st.pyplot(plt.gcf())
-
-    # Optional: Show cluster centers
-    if st.checkbox("Show cluster centers"):
-        centers = pd.DataFrame(kmeans.cluster_centers_, columns=selected_features)
-        st.write("Cluster Centers:")
-        st.dataframe(centers.style.set_precision(3))
-
-    # Extra gaming-style notification
-    st.balloons()
-    st.success("Cluster analysis complete! Ready for your next gaming move? 🎮")
-
+            st.image("assets/gifs/gta_footer.gif", use_column_width=True)
+        else:
+            st.warning("⛔ Select at least 2 features to cluster.")
+    else:
+        st.warning("🧾 Upload data or fetch stock prices to start your cluster job.")
