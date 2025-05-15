@@ -31,11 +31,11 @@ def apply_zombie_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    st.image("assets/gifs/zombie_header.gif", use_column_width=True)
+    st.image("assets/gifs/zombie_header.gif", use_container_width=True)
 
 
-# Main Zombie Theme Logic
-def run_zombie_theme():
+# 🔁 Wrap all your zombie logic in this function
+def zombie_app():
     apply_zombie_theme()
     st.title("💀 Zombie Theme: Stock Price Prediction")
 
@@ -49,7 +49,10 @@ def run_zombie_theme():
         ticker = st.text_input("Enter Stock Ticker (e.g., AAPL):", value="AAPL")
         if st.button("Fetch Data"):
             df = yf.download(ticker, period="1y")
-            st.success(f"Fetched {len(df)} rows for {ticker}")
+            if not df.empty:
+                st.success(f"Fetched {len(df)} rows for {ticker}")
+            else:
+                st.error("Failed to fetch data. Please check the ticker symbol.")
     else:
         uploaded_file = st.file_uploader("Upload your Kragle CSV", type=["csv"])
         if uploaded_file:
@@ -96,7 +99,7 @@ def run_zombie_theme():
         st.pyplot(plt)
 
         st.markdown("---")
-        st.image("assets/gifs/zombie_line.gif", use_column_width=True)
+        st.image("assets/gifs/zombie_line.gif", use_container_width=True)
 
     else:
         st.warning("Please upload a dataset or fetch a valid ticker first.")
