@@ -47,8 +47,7 @@ def apply_gta_vi_theme():
 
     st.image("assets/gifs/gta_banner.gif", use_container_width=True)
 
-
-def run_gta_vi_theme():
+def gaming_app():
     apply_gta_vi_theme()
     st.title("💸 GTA VI Theme: Logistic Regression Heist")
 
