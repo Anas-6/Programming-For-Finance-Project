@@ -38,7 +38,7 @@ def apply_gta_vi_theme():
                 color: black;
             }
 
-            .css-1v0mbdj, .st-bx, .css-1dp5vir {
+            .st-bx, .css-1dp5vir {
                 background-color: #1a1a1a !important;
             }
         </style>
@@ -47,11 +47,10 @@ def apply_gta_vi_theme():
     st.image("assets/gifs/gta_banner.gif", use_column_width=True)
 
 
-# 🎮 GTA VI Theme Main Logic
+# 🚓 GTA VI Theme App Logic
 def gaming_app():
     apply_gta_vi_theme()
     st.title("💸 GTA VI Theme: Cluster Heist (K-Means)")
-
     st.markdown("**Vice City meets Finance** — Find hidden clusters in your financial empire.")
 
     data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kragle)", "Yahoo Finance"))
@@ -61,26 +60,29 @@ def gaming_app():
     if data_source == "Upload CSV (Kragle)":
         uploaded = st.file_uploader("Upload financial CSV file", type=["csv"])
         if uploaded:
-            df = pd.read_csv(uploaded)
-            st.success("💾 File uploaded successfully.")
+            try:
+                df = pd.read_csv(uploaded)
+                st.success("💾 File uploaded successfully.")
+            except Exception as e:
+                st.error(f"❌ Failed to read CSV: {e}")
     else:
-        tickers = st.text_input("📈 Enter stock tickers (comma separated)", value="AAPL,MSFT,TSLA,NVDA")
+        tickers_input = st.text_input("📈 Enter stock tickers (comma separated)", value="AAPL,MSFT,TSLA,NVDA")
         if st.button("🚦 Download Stock Data"):
             prices = []
-            tickers_list = []
+            valid_tickers = []
 
-            for symbol in tickers.split(','):
-                symbol = symbol.strip().upper()
+            for ticker in tickers_input.split(','):
+                symbol = ticker.strip().upper()
                 try:
                     data = yf.download(symbol, period="6mo")
                     if not data.empty and 'Close' in data:
                         prices.append(data['Close'].rename(symbol))
-                        tickers_list.append(symbol)
+                        valid_tickers.append(symbol)
                         st.success(f"✅ {symbol} data fetched.")
                     else:
                         st.warning(f"⚠️ No valid 'Close' data for: {symbol}")
                 except Exception as e:
-                    st.warning(f"❌ Failed to fetch data for {symbol}: {e}")
+                    st.error(f"❌ Failed to fetch data for {symbol}: {e}")
 
             if prices:
                 try:
@@ -106,25 +108,25 @@ def gaming_app():
         selected_features = st.multiselect("🎯 Select features for clustering", df.columns.tolist(), default=df.columns[:2].tolist())
 
         if len(selected_features) >= 2:
-            data = df[selected_features]
-            scaler = StandardScaler()
-            data_scaled = scaler.fit_transform(data)
-
-            model = KMeans(n_clusters=num_clusters, random_state=42)
-            labels = model.fit_predict(data_scaled)
-            df["Cluster"] = labels
-
-            st.success("💰 Clustering complete. You've unlocked new territories.")
-
-            fig = px.scatter(df, x=selected_features[0], y=selected_features[1], color="Cluster",
-                             title="🌴 GTA VI Clusters: Vice City Turf Map",
-                             template="plotly_dark", color_discrete_sequence=px.colors.sequential.Plasma)
-            st.plotly_chart(fig)
-
             try:
+                data = df[selected_features]
+                scaler = StandardScaler()
+                data_scaled = scaler.fit_transform(data)
+
+                model = KMeans(n_clusters=num_clusters, random_state=42)
+                labels = model.fit_predict(data_scaled)
+                df["Cluster"] = labels
+
+                st.success("💰 Clustering complete. You've unlocked new territories.")
+
+                fig = px.scatter(df, x=selected_features[0], y=selected_features[1], color="Cluster",
+                                 title="🌴 GTA VI Clusters: Vice City Turf Map",
+                                 template="plotly_dark", color_discrete_sequence=px.colors.sequential.Plasma)
+                st.plotly_chart(fig)
+
                 st.image("assets/gifs/gta_footer.gif", use_column_width=True)
-            except:
-                st.warning("📁 Footer image not found.")
+            except Exception as e:
+                st.error(f"❌ Clustering failed: {e}")
         else:
             st.warning("⛔ Select at least 2 features to cluster.")
     else:
