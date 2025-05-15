@@ -66,7 +66,7 @@ elif page == "🧟 Zombie Realm":
 elif page == "🚀 Futuristic Zone":
     futuristic.futuristic_app()
 elif page == "🐉 Thrones Territory":
-    got.got_app()
+    got.game_of_thrones_app()
 elif page == "🎮 Gaming World":
     gaming.gaming_app()
 
