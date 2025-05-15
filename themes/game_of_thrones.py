@@ -38,7 +38,7 @@ def apply_got_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    st.image("assets/gifs/got_header.gif", use_column_width=True)
+    st.image("assets/gifs/got_header.gif", use_container_width=True)
 
 
 # Main Game of Thrones Theme Logic
