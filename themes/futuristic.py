@@ -82,6 +82,6 @@ def futuristic_app():
         st.plotly_chart(fig)
 
         try:
-            st.image("assets/gifs/futuristic_footer.gif", use_container_width=True)
+            st.image("https://github.com/Anas-6/Programming-For-Finance-Project/blob/main/assets/gifs/futuristic.gif", use_container_width=True)
         except Exception:
             st.warning("⚠️ Futuristic footer GIF not found.")
