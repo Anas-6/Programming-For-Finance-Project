@@ -34,7 +34,7 @@ st.markdown("""
 # Add project logo
 col1, col2 = st.columns([1, 6])
 with col1:
-   st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/White_square_with_question_mark.png/600px-White_square_with_question_mark.png", width=90)
+   Image.open("assets/images/finverse_logo.png").show()
 
 with col2:
     st.title("FinVerse: Financial Realms Reimagined")
