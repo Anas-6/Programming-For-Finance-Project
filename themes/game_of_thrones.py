@@ -13,24 +13,16 @@ def apply_got_theme():
     st.markdown("""
         <style>
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
-
-            body {
-                background-color: #1a1a1a;
-                color: #f8f1e5;
-            }
-
             h1, h2, h3 {
                 font-family: 'MedievalSharp', cursive;
                 color: #e63946;
             }
-
             .stButton>button {
                 background-color: #343a40;
                 border: 1px solid #e63946;
                 color: white;
                 font-weight: bold;
             }
-
             .stButton>button:hover {
                 background-color: #e63946;
                 color: white;
@@ -38,19 +30,21 @@ def apply_got_theme():
         </style>
     """, unsafe_allow_html=True)
 
-    st.image("assets/gifs/got_banner.gif", use_column_width=True)
-
+    try:
+        st.image("assets/gifs/got_banner.gif", use_container_width=True)
+    except Exception:
+        st.warning("⚠️ GOT banner GIF not found.")
 
 # Main Game of Thrones Theme Logic
-def run_got_theme():
+def got_app():
     apply_got_theme()
     st.title("🐉 Game of Thrones Theme: Cluster the Kingdoms (K-Means)")
 
     st.markdown("Group stocks or financial features into clusters using K-Means Clustering.")
 
     data_source = st.radio("Choose Data Source:", ("Yahoo Finance", "Upload CSV"))
-
     df = None
+
     if data_source == "Yahoo Finance":
         tickers = st.text_input("Enter multiple tickers separated by commas (e.g., AAPL,GOOG,MSFT):")
         if st.button("Fetch Data"):
@@ -58,12 +52,13 @@ def run_got_theme():
                 data = {}
                 for ticker in tickers.split(','):
                     ticker = ticker.strip()
-                    stock_data = yf.download(ticker, period="6mo")['Close']
-                    data[ticker] = stock_data
+                    stock_data = yf.download(ticker, period="6mo")
+                    if 'Close' in stock_data.columns:
+                        data[ticker] = stock_data['Close']
                 df = pd.DataFrame(data).dropna()
                 st.success(f"Fetched {df.shape[0]} rows.")
-            except:
-                st.error("Failed to fetch data.")
+            except Exception as e:
+                st.error(f"Failed to fetch data: {e}")
     else:
         uploaded = st.file_uploader("Upload Kragle Financial CSV", type=["csv"])
         if uploaded:
@@ -80,7 +75,6 @@ def run_got_theme():
         st.pyplot(fig)
 
         st.subheader("⚔️ K-Means Clustering")
-
         try:
             num_clusters = st.slider("Select number of clusters", 2, 6, 3)
             features = st.multiselect("Select features to use", df.columns.tolist(), default=df.columns[:2].tolist())
@@ -102,7 +96,10 @@ def run_got_theme():
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
-        st.image("assets/gifs/got_footer.gif", use_column_width=True)
+        try:
+            st.image("assets/gifs/got_footer.gif", use_container_width=True)
+        except Exception:
+            st.warning("⚠️ GOT footer GIF not found.")
 
     else:
         st.warning("Please load data to continue.")
