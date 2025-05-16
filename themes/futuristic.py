@@ -54,7 +54,6 @@ def apply_futuristic_theme():
         st.image("assets/gifs/futuristic.gif", use_container_width=True)
     except Exception:
         st.warning("⚠️ Futuristic header GIF not found.")
-
 # Main Futuristic Logic
 def futuristic_app():
     apply_futuristic_theme()
