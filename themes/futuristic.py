@@ -11,41 +11,21 @@ import yfinance as yf
 def apply_futuristic_theme():
     st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
-
-            html, body, [class*="css"] {
-                background-color: #000000;
-                color: #00ffff;
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
+            h1, h2, h3 {
                 font-family: 'Orbitron', sans-serif;
-            }
-
-            h1, h2, h3, h4, h5, h6, .stTitle, .stHeader, .stMarkdown {
-                font-family: 'Orbitron', sans-serif !important;
                 color: #00ffff;
                 text-shadow: 0 0 10px #00ffff;
             }
-
             .stButton>button {
                 background-color: #1a1a1a;
                 border: 1px solid #33ffcc;
                 color: white;
-                font-family: 'Orbitron', sans-serif;
                 transition: all 0.3s ease-in-out;
             }
-
             .stButton>button:hover {
                 background-color: #00ffff;
                 color: black;
-            }
-
-            .stDataFrame, .stTable, .css-18ni7ap, .css-1d391kg, .stMarkdown {
-                font-family: 'Orbitron', sans-serif;
-                color: #00ffff;
-            }
-
-            .stPlotlyChart {
-                border: 1px solid #33ffcc;
-                border-radius: 8px;
             }
         </style>
     """, unsafe_allow_html=True)
@@ -54,6 +34,7 @@ def apply_futuristic_theme():
         st.image("assets/gifs/futuristic.gif", use_container_width=True)
     except Exception:
         st.warning("⚠️ Futuristic header GIF not found.")
+
 # Main Futuristic Logic
 def futuristic_app():
     apply_futuristic_theme()
@@ -104,3 +85,11 @@ def futuristic_app():
             st.image("assets/gifs/futuristic2.gif", use_container_width=True)
         except Exception:
             st.warning("⚠️ Futuristic footer GIF not found.")
+
+    # 🔻 Footer Credit (White Neon Glow Style)
+    st.markdown("""
+    <div style='text-align: center; color: white; margin-top: 50px; font-family: Orbitron, sans-serif;
+    text-shadow: 0 0 8px #00ffff;'>
+    🚀 Developed by Team FinVerse | FAST NUCES | Spring 2025 - Programming for Finance
+    </div>
+    """, unsafe_allow_html=True)
