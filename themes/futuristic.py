@@ -40,7 +40,7 @@ def apply_futuristic_theme():
 
             .stDataFrame, .stTable, .css-18ni7ap, .css-1d391kg, .stMarkdown {
                 font-family: 'Orbitron', sans-serif;
-                color: #000000;
+                color: #ffffff;
             }
 
             .stPlotlyChart {
