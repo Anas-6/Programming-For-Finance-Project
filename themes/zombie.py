@@ -13,10 +13,10 @@ def apply_zombie_theme():
     # Inject Google Fonts via HTML
     components.html("""
         <style>
-        import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
 
-        html, body, [class*="css"]  {
-            font-family: 'Creepster', cursive !important;
+        html, body, [class*="css"].creepster_regular  {
+            font-family: "Creepster", system-ui;
             background-color: #0d0d0d;
             color: #39ff14;
         }
