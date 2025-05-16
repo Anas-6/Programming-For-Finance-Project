@@ -40,7 +40,7 @@ def apply_zombie_theme():
 
             .stDataFrame, .stTable, .stMarkdown, .css-18ni7ap, .css-1d391kg {
                 font-family: 'Creepster', cursive;
-                color: #c5c6c7;
+                color: #ffffff;
             }
 
             .stPlotlyChart {
