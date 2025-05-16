@@ -55,7 +55,7 @@ def gaming_app():
     st.title("💸 GTA VI Theme: Logistic Regression Heist")
     st.markdown("**Vice City meets Finance** — Predict your financial empire's future moves.")
 
-    data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kragle)", "Yahoo Finance"))
+    data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kaggle)", "Yahoo Finance"))
 
     df = None
 
