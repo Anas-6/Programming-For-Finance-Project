@@ -14,33 +14,50 @@ def apply_got_theme():
     st.markdown("""
         <style>
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
-            html, body, [class*="css"]  {
-                font-family: 'MedievalSharp', cursive;
+
+            html, body, [class*="css"], .stMarkdown, .stTextInput, .stSelectbox, .stNumberInput,
+            .stButton>button, .stRadio, .stDataFrame, .stSlider {
+                font-family: 'MedievalSharp', cursive !important;
+                color: white !important;
+            }
+
+            h1, h2, h3 {
+                font-family: 'MedievalSharp', cursive !important;
+                color: white !important;
+                text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 15px #ff0000;
+            }
+
+            body {
                 background-image: url("https://i.imgur.com/Bazj9K3.jpg");
                 background-size: cover;
                 background-attachment: fixed;
-                color: #f8f1e5;
             }
-            h1, h2, h3 {
-                color: #e63946;
-            }
+
             .stButton>button {
                 background-color: #343a40;
                 border: 1px solid #e63946;
                 color: white;
                 font-weight: bold;
+                transition: 0.3s ease-in-out;
+                font-family: 'MedievalSharp', cursive !important;
             }
+
             .stButton>button:hover {
                 background-color: #e63946;
                 color: white;
             }
+
             .reportview-container .main .block-container {
                 padding-top: 2rem;
                 padding-bottom: 2rem;
             }
         </style>
     """, unsafe_allow_html=True)
-    st.image("assets/gifs/got_header.gif", use_container_width=True)
+
+    try:
+        st.image("assets/gifs/got_header.gif", use_container_width=True)
+    except Exception:
+        st.warning("⚠️ GOT header GIF not found.")
 
 # Main App Function
 def got_app():
