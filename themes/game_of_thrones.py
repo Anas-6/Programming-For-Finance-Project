@@ -42,7 +42,7 @@ def got_app():
 
     st.markdown("Group stocks or financial features into clusters using K-Means Clustering.")
 
-    data_source = st.radio("Choose Data Source:", ("Yahoo Finance", "Upload CSV"))
+    data_source = st.radio("Choose Data Source:", ("Yahoo Finance", "Upload CSV(Kaggle)"))
 
     df = None
     if data_source == "Yahoo Finance":
