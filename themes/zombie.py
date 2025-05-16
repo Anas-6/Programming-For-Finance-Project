@@ -14,13 +14,14 @@ def apply_zombie_theme():
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
 
-            body {
+            html, body, [class*="css"] {
                 background-color: #0b0c10;
                 color: #c5c6c7;
+                font-family: 'Creepster', cursive;
             }
 
-            h1, h2, h3, h4 {
-                font-family: 'Creepster', cursive;
+            h1, h2, h3, h4, h5, h6, .stTitle, .stHeader, .stMarkdown {
+                font-family: 'Creepster', cursive !important;
                 color: #66fcf1;
             }
 
@@ -29,6 +30,7 @@ def apply_zombie_theme():
                 color: white;
                 border: 1px solid #45a29e;
                 transition: 0.3s;
+                font-family: 'Creepster', cursive;
             }
 
             .stButton>button:hover {
@@ -36,10 +38,15 @@ def apply_zombie_theme():
                 color: black;
             }
 
-            .reportview-container {
-                background: #0b0c10;
+            .stDataFrame, .stTable, .stMarkdown, .css-18ni7ap, .css-1d391kg {
+                font-family: 'Creepster', cursive;
+                color: #c5c6c7;
             }
 
+            .stPlotlyChart {
+                border: 1px solid #45a29e;
+                border-radius: 10px;
+            }
         </style>
     """, unsafe_allow_html=True)
 
@@ -47,7 +54,6 @@ def apply_zombie_theme():
         st.image("assets/gifs/zombie_header.gif", use_container_width=True)
     except:
         st.warning("⚠️ Header GIF not found.")
-
 
 def zombie_app():
     apply_zombie_theme()
