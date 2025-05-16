@@ -6,7 +6,7 @@ from show_welcome import show_welcome
 # Set Streamlit page configuration
 st.set_page_config(
     page_title="FinVerse - Financial Realms Reimagined",
-    page_icon="🎨",
+    page_icon=st.image("assets/images/finverse_logo.png", use_container_width=True),
     layout="wide"
 )
 
