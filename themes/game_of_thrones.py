@@ -13,12 +13,14 @@ def apply_got_theme():
     st.markdown("""
         <style>
             @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
-            body {
-                background-color: #1a1a1a;
+            html, body, [class*="css"]  {
+                font-family: 'MedievalSharp', cursive;
+                background-image: url("https://i.imgur.com/Bazj9K3.jpg");
+                background-size: cover;
+                background-attachment: fixed;
                 color: #f8f1e5;
             }
             h1, h2, h3 {
-                font-family: 'MedievalSharp', cursive;
                 color: #e63946;
             }
             .stButton>button {
@@ -31,6 +33,10 @@ def apply_got_theme():
                 background-color: #e63946;
                 color: white;
             }
+            .reportview-container .main .block-container {
+                padding-top: 2rem;
+                padding-bottom: 2rem;
+            }
         </style>
     """, unsafe_allow_html=True)
     st.image("assets/gifs/got_header.gif", use_container_width=True)
@@ -39,14 +45,15 @@ def apply_got_theme():
 def got_app():
     apply_got_theme()
     st.title("🐉 Game of Thrones Theme: Cluster the Kingdoms (K-Means)")
-
     st.markdown("Group stocks or financial features into clusters using K-Means Clustering.")
 
-    data_source = st.radio("Choose Data Source:", ("Yahoo Finance", "Upload CSV(Kaggle)"))
+    data_source = st.radio("Choose Data Source:", ["Yahoo Finance", "Upload CSV (Kaggle)"])
 
     df = None
+
+    # Yahoo Finance Option
     if data_source == "Yahoo Finance":
-        tickers = st.text_input("Enter multiple tickers separated by commas (e.g., AAPL,GOOG,MSFT):")
+        tickers = st.text_input("Enter tickers (comma-separated, e.g., AAPL, MSFT, TSLA):")
         if st.button("Fetch Data"):
             tickers_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
             data_dict = {}
@@ -57,36 +64,40 @@ def got_app():
                     if not data.empty:
                         data_dict[ticker] = data["Close"]
                     else:
-                        st.warning(f"No valid data for ticker: {ticker}")
+                        st.warning(f"No data for {ticker}")
                 except Exception as e:
-                    st.warning(f"Error fetching data for {ticker}: {e}")
+                    st.error(f"Error with {ticker}: {e}")
 
             if data_dict:
                 df = pd.DataFrame(data_dict).dropna()
-                st.success(f"Fetched data for {len(data_dict)} ticker(s).")
+                st.success("Fetched data successfully.")
             else:
-                st.error("Failed to fetch data for any valid ticker.")
+                st.error("No valid data fetched.")
 
-    else:
-        uploaded = st.file_uploader("Upload Kragle Financial CSV", type=["csv"])
+    # Kaggle/CSV Option
+    elif data_source == "Upload CSV (Kaggle)":
+        uploaded = st.file_uploader("Upload Kragle Financial CSV File", type=["csv"])
         if uploaded:
-            df = pd.read_csv(uploaded)
-            st.success("File uploaded.")
+            try:
+                df = pd.read_csv(uploaded)
+                st.success("CSV data loaded successfully!")
+            except Exception as e:
+                st.error(f"Error reading file: {e}")
 
     if df is not None and not df.empty:
-        st.subheader("📊 Preview of Data")
+        st.subheader("📊 Data Preview")
         st.dataframe(df.head())
 
         st.subheader("🔥 Feature Correlation")
         fig, ax = plt.subplots()
-        sns.heatmap(df.corr(), annot=True, ax=ax, cmap="coolwarm")
+        sns.heatmap(df.corr(), annot=True, cmap="coolwarm", ax=ax)
         st.pyplot(fig)
 
         st.subheader("⚔️ K-Means Clustering")
 
         try:
             num_clusters = st.slider("Select number of clusters", 2, 6, 3)
-            features = st.multiselect("Select features to use", df.columns.tolist(), default=df.columns[:2].tolist())
+            features = st.multiselect("Select features for clustering", df.columns.tolist(), default=df.columns[:2].tolist())
 
             if len(features) >= 2:
                 X = df[features]
@@ -99,14 +110,13 @@ def got_app():
                 st.success("Clustering complete!")
 
                 fig = px.scatter(df, x=features[0], y=features[1], color='Cluster',
-                                 title="🏰 Clusters of the Realm", template="plotly_dark")
+                                 title="🏰 Realm Clusters", template="plotly_dark")
                 st.plotly_chart(fig)
             else:
-                st.warning("Select at least 2 features for clustering.")
+                st.warning("Please select at least 2 features.")
         except Exception as e:
-            st.error(f"An error occurred during clustering: {e}")
+            st.error(f"Error during clustering: {e}")
 
         st.image("assets/gifs/got_footer.gif", use_container_width=True)
-
     else:
-        st.warning("Please load data to continue.")
+        st.info("Please load data to proceed.")
