@@ -11,21 +11,41 @@ import yfinance as yf
 def apply_futuristic_theme():
     st.markdown("""
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Orbitron&display=swap');
-            h1, h2, h3 {
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+            html, body, [class*="css"] {
+                background-color: #000000;
+                color: #00ffff;
                 font-family: 'Orbitron', sans-serif;
+            }
+
+            h1, h2, h3, h4, h5, h6, .stTitle, .stHeader, .stMarkdown {
+                font-family: 'Orbitron', sans-serif !important;
                 color: #00ffff;
                 text-shadow: 0 0 10px #00ffff;
             }
+
             .stButton>button {
                 background-color: #1a1a1a;
                 border: 1px solid #33ffcc;
                 color: white;
+                font-family: 'Orbitron', sans-serif;
                 transition: all 0.3s ease-in-out;
             }
+
             .stButton>button:hover {
                 background-color: #00ffff;
                 color: black;
+            }
+
+            .stDataFrame, .stTable, .css-18ni7ap, .css-1d391kg, .stMarkdown {
+                font-family: 'Orbitron', sans-serif;
+                color: #00ffff;
+            }
+
+            .stPlotlyChart {
+                border: 1px solid #33ffcc;
+                border-radius: 8px;
             }
         </style>
     """, unsafe_allow_html=True)
