@@ -48,23 +48,18 @@ def apply_gta_vi_theme():
     except Exception:
         st.warning("⚠️ Header GIF not found.")
 
-
 # 🚓 GTA VI Logistic Regression Heist
 def gaming_app():
     apply_gta_vi_theme()
     st.title("💸 GTA VI Theme: Logistic Regression Heist")
     st.markdown("**Vice City meets Finance** — Predict your financial empire's future moves.")
 
-    data_source = st.radio("💾 Choose your data source", ("Upload CSV (Kaggle)", "Yahoo Finance"))
+    data_source = st.radio("💾 Choose your data source", ("Yahoo Finance", "Upload CSV (Kaggle)"))
 
     df = None
 
-    if data_source == "Upload CSV (Kragle)":
-        uploaded_file = st.file_uploader("📂 Upload your Kragle CSV file", type=["csv"])
-        if uploaded_file:
-            df = pd.read_csv(uploaded_file)
-            st.success("✅ CSV uploaded successfully.")
-    else:
+    # Yahoo Finance First
+    if data_source == "Yahoo Finance":
         ticker = st.text_input("📈 Enter a stock ticker (e.g., TSLA)", value="TSLA")
         if st.button("🚦 Fetch Stock Data"):
             try:
@@ -77,46 +72,60 @@ def gaming_app():
             except Exception as e:
                 st.error(f"❌ Failed to fetch stock data: {e}")
 
+    # Then CSV Upload
+    elif data_source == "Upload CSV (Kaggle)":
+        uploaded_file = st.file_uploader("📂 Upload your Kragle CSV file", type=["csv"])
+        if uploaded_file:
+            try:
+                df = pd.read_csv(uploaded_file)
+                st.success("✅ CSV uploaded successfully.")
+            except Exception as e:
+                st.error(f"❌ Failed to read CSV: {e}")
+
+    # If Data Exists
     if df is not None and not df.empty:
         st.subheader("🔎 Vice City Data Preview")
         st.dataframe(df.tail())
 
-        # 🎯 Feature Engineering
-        df['Return'] = df['Close'].pct_change()
-        df['MA5'] = df['Close'].rolling(window=5).mean()
-        df['MA10'] = df['Close'].rolling(window=10).mean()
-        df['Target'] = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
-        df.dropna(inplace=True)
+        try:
+            # 🎯 Feature Engineering
+            df['Return'] = df['Close'].pct_change()
+            df['MA5'] = df['Close'].rolling(window=5).mean()
+            df['MA10'] = df['Close'].rolling(window=10).mean()
+            df['Target'] = np.where(df['Close'].shift(-1) > df['Close'], 1, 0)
+            df.dropna(inplace=True)
 
-        # 📊 Model Training
-        features = ['Return', 'MA5', 'MA10']
-        X = df[features]
-        y = df['Target']
+            features = ['Return', 'MA5', 'MA10']
+            X = df[features]
+            y = df['Target']
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        model = LogisticRegression()
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
+            # 📊 Model Training
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            model = LogisticRegression()
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
 
-        # 📈 Results
-        acc = accuracy_score(y_test, y_pred)
-        cm = confusion_matrix(y_test, y_pred)
+            acc = accuracy_score(y_test, y_pred)
+            cm = confusion_matrix(y_test, y_pred)
 
-        st.subheader("📊 Classification Report")
-        st.text(classification_report(y_test, y_pred))
+            st.subheader("📊 Classification Report")
+            st.text(classification_report(y_test, y_pred))
 
-        st.subheader(f"⚡ Accuracy: {acc:.4f}")
-        fig_cm = px.imshow(cm, text_auto=True, title="Confusion Matrix", color_continuous_scale='Plasma')
-        st.plotly_chart(fig_cm)
+            st.subheader(f"⚡ Accuracy: {acc:.4f}")
+            fig_cm = px.imshow(cm, text_auto=True, title="Confusion Matrix", color_continuous_scale='Plasma')
+            st.plotly_chart(fig_cm)
 
-        st.subheader("🎮 Feature Impact")
-        coef_df = pd.DataFrame({'Feature': features, 'Coefficient': model.coef_[0]})
-        fig_coef = px.bar(coef_df, x='Feature', y='Coefficient', color='Coefficient', template="plotly_dark")
-        st.plotly_chart(fig_coef)
+            st.subheader("🎮 Feature Impact")
+            coef_df = pd.DataFrame({'Feature': features, 'Coefficient': model.coef_[0]})
+            fig_coef = px.bar(coef_df, x='Feature', y='Coefficient', color='Coefficient', template="plotly_dark")
+            st.plotly_chart(fig_coef)
+
+        except Exception as e:
+            st.error(f"Something went wrong in model training or plotting: {e}")
 
         try:
             st.image("assets/gifs/gta_footer.gif", use_container_width=True)
         except Exception:
             st.warning("⚠️ Footer GIF not found.")
     else:
-        st.warning("🧾 Upload data or fetch stock prices to start your logistic regression heist.")
+        st.info("🧾 Upload a CSV or fetch stock prices to start your logistic regression heist.")
