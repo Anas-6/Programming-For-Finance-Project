@@ -54,7 +54,7 @@ def zombie_app():
     st.title("💀 Zombie Theme: Stock Price Prediction(Linear)")
     st.markdown("Enter a stock ticker or upload your dataset to begin.")
 
-    data_source = st.radio("Choose data source:", ("Yahoo Finance", "Upload CSV"))
+    data_source = st.radio("Choose data source:", ("Yahoo Finance", "Upload CSV(Kaggle)"))
     df = None
 
     if data_source == "Yahoo Finance":
