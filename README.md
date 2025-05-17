@@ -23,6 +23,18 @@ To develop a collaborative, interactive, and creative machine learning app using
 
 ---
 
+## 🧑‍🤝‍🧑 Group Members & Themes
+
+| Name                        | Theme             | Model                  |
+|------------------------|-------------------|------------------------|
+| Matin Khan      (22i-9842)  | Zombie Realm      | Linear Regression      |
+| Mohid Ayaz      (22i-9960)  | Futuristic Realm  | Logistic Regression    |
+| Muhammad Anas   (22i-9808)  | Game of Thrones   | K-Means Clustering     |
+| Muhammad Anas   (22i-9808)  | Gaming Realm      | Logistic Regression    |
+
+---
+
+
 ## 📦 Features
 
 - 🔄 Upload Data from  Kaggle or fetch stock data via **Yahoo Finance API**
@@ -36,18 +48,7 @@ To develop a collaborative, interactive, and creative machine learning app using
 - 🌐 Fully deployed on **Streamlit Cloud**
 - 📂 Complete open-source repo with all themes and modules
 
----
 
-## 🧑‍🤝‍🧑 Group Members & Themes
-
-| Name                        | Theme             | Model                  |
-|------------------------|-------------------|------------------------|
-| Matin Khan      (22i-9842)  | Zombie Realm      | Linear Regression      |
-| Mohid Ayaz      (22i-9960)  | Futuristic Realm  | Logistic Regression    |
-| Muhammad Anas   (22i-9808)  | Game of Thrones   | K-Means Clustering     |
-| Muhammad Anas   (22i-9808)  | Gaming Realm      | Logistic Regression    |
-
----
 
 ## 🧪 Machine Learning Models Used
 
